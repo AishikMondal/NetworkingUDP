@@ -1,74 +1,69 @@
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
-import java.nio.charset.StandardCharsets;
+import java.net.*;
+import java.util.Scanner;
 
 public class UDPClient {
-    private static final int LOCAL_PORT = 2001;
-    private static final int SERVER_PORT = 2000;
-    private static final String HOST = "localhost";
 
     public static void main(String[] args) throws Exception {
-        InetAddress serverAddress = InetAddress.getByName(HOST);
 
-        try (DatagramSocket socket = new DatagramSocket(LOCAL_PORT);
-             BufferedReader keyboard = new BufferedReader(
-                     new InputStreamReader(System.in))) {
+        // Client uses port 2001 and sends messages to server port 2000.
+        DatagramSocket socket = new DatagramSocket(2001);
+        InetAddress ip = InetAddress.getByName("localhost");
 
-            System.out.println("Client started on port " + LOCAL_PORT
-                    + ". Type /exit to quit.");
+        // This thread keeps receiving messages while we type.
+        Thread receiver = new Thread(() -> {
+            try {
+                while (true) {
+                    byte[] buffer = new byte[1024];
+                    DatagramPacket packet =
+                            new DatagramPacket(buffer, buffer.length);
 
-            // A dedicated thread receives messages while the main thread sends.
-            Thread receiver = new Thread(() -> receiveMessages(socket),
-                    "udp-client-receiver");
-            receiver.setDaemon(true);
-            receiver.start();
+                    socket.receive(packet);
 
-            String line;
-            while (!socket.isClosed() && (line = keyboard.readLine()) != null) {
-                byte[] data = line.getBytes(StandardCharsets.UTF_8);
-                DatagramPacket packet = new DatagramPacket(
-                        data, data.length, serverAddress, SERVER_PORT
-                );
-                socket.send(packet);
+                    String message = new String(
+                            packet.getData(), 0, packet.getLength()
+                    );
 
-                if ("/exit".equals(line)) {
-                    break;
+                    System.out.println("\nServer: " + message);
+
+                    if (message.equals("/exit")) {
+                        System.out.println("Server left the chat.");
+                        socket.close();
+                        break;
+                    }
+
+                    System.out.print("You: ");
                 }
-                System.out.print("You: ");
+            } catch (Exception e) {
+                // The socket closes when the chat ends.
             }
-        }
-    }
+        });
 
-    private static void receiveMessages(DatagramSocket socket) {
-        try {
-            while (!socket.isClosed()) {
-                byte[] buffer = new byte[1024];
-                DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-                socket.receive(packet);
+        receiver.setDaemon(true);
+        receiver.start();
 
-                String message = new String(
-                        packet.getData(),
-                        packet.getOffset(),
-                        packet.getLength(),
-                        StandardCharsets.UTF_8
-                );
+        // Main thread sends messages typed by the user.
+        Scanner sc = new Scanner(System.in);
+        System.out.println("Client started. Type /exit to quit.");
+        System.out.print("You: ");
 
-                System.out.println("\nServer: " + message);
-                if ("/exit".equals(message)) {
-                    System.out.println("Server sent the exit command.");
-                    socket.close();
-                    return;
-                }
-                System.out.print("You: ");
+        while (!socket.isClosed()) {
+            String message = sc.nextLine();
+            byte[] data = message.getBytes();
+
+            DatagramPacket packet = new DatagramPacket(
+                    data, data.length, ip, 2000
+            );
+
+            socket.send(packet);
+
+            if (message.equals("/exit")) {
+                socket.close();
+                break;
             }
-        } catch (SocketException e) {
-            // Expected when the local socket is closed during shutdown.
-        } catch (Exception e) {
-            System.err.println("Receive error: " + e.getMessage());
+
+            System.out.print("You: ");
         }
+
+        sc.close();
     }
 }
