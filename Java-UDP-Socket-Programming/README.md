@@ -1,114 +1,70 @@
-# Java UDP Socket Programming
+# Java UDP Socket Programming — Detailed Lab Guide
 
-Two Java networking practicals using UDP (`DatagramSocket` and `DatagramPacket`).
+This folder contains two Java UDP practicals. The full illustrated explanation, UDP theory, packet layout, Mermaid architecture/sequence diagrams, code walkthroughs, execution commands, and troubleshooting guide are maintained in the repository's main [README.md](../../README.md).
 
-## Repository structure
+## Experiments
 
-```text
-Java-UDP-Socket-Programming/
-├── README.md
-├── .gitignore
-├── Experiment-8.1-Simple-UDP/
-│   ├── UDPClient.java
-│   └── UDPServer.java
-└── Experiment-8.2-Bidirectional-UDP-Chat/
-    ├── UDPClient.java
-    └── UDPServer.java
-```
+- **Experiment 8.1 — Simple UDP:** one client datagram sent to a server listening on port 2000.
+- **Experiment 8.2 — Bidirectional UDP Chat:** server on port 2000 and client on port 2001, each with a sending loop and a dedicated receiving thread.
 
-## Requirements
+## Source files
 
-- JDK 8 or later
-- Two terminal windows for each experiment
+| Experiment | File |
+|---|---|
+| Simple UDP | [UDPClient.java](Experiment-8.1-Simple-UDP/UDPClient.java) |
+| Simple UDP | [UDPServer.java](Experiment-8.1-Simple-UDP/UDPServer.java) |
+| Bidirectional chat | [UDPClient.java](Experiment-8.2-Bidirectional-UDP-Chat/UDPClient.java) |
+| Bidirectional chat | [UDPServer.java](Experiment-8.2-Bidirectional-UDP-Chat/UDPServer.java) |
 
-Check Java installation:
+## Quick start
 
-```bash
-java -version
-javac -version
-```
+Requires JDK 8 or later. Run commands from the repository root.
 
-## Experiment 8.1 — Simple UDP
-
-The client sends `This is UDP Client` to the server on UDP port `2000`.
-
-### Compile
-
-From the repository root:
+### Simple UDP
 
 ```bash
 javac Java-UDP-Socket-Programming/Experiment-8.1-Simple-UDP/UDPServer.java
 javac Java-UDP-Socket-Programming/Experiment-8.1-Simple-UDP/UDPClient.java
 ```
 
-### Run
-
-Terminal 1 (start the server first):
+Start the server in terminal 1:
 
 ```bash
 java -cp Java-UDP-Socket-Programming/Experiment-8.1-Simple-UDP UDPServer
 ```
 
-Terminal 2:
+Then run the client in terminal 2:
 
 ```bash
 java -cp Java-UDP-Socket-Programming/Experiment-8.1-Simple-UDP UDPClient
 ```
 
-Expected server output:
-
-```text
-Received ---> This is UDP Client
-```
-
-## Experiment 8.2 — Bi-directional UDP chat
-
-Both applications bind to a local UDP port and run a receiving thread alongside the sending loop.
-
-- Server local port: `2000`
-- Client local port: `2001`
-- Client sends to server port `2000`
-- Server sends to client port `2001`
-
-### Compile
+### Bidirectional UDP chat
 
 ```bash
 javac Java-UDP-Socket-Programming/Experiment-8.2-Bidirectional-UDP-Chat/UDPServer.java
 javac Java-UDP-Socket-Programming/Experiment-8.2-Bidirectional-UDP-Chat/UDPClient.java
 ```
 
-### Run
-
-Terminal 1:
+Start server:
 
 ```bash
 java -cp Java-UDP-Socket-Programming/Experiment-8.2-Bidirectional-UDP-Chat UDPServer
 ```
 
-Terminal 2:
+Start client in a second terminal:
 
 ```bash
 java -cp Java-UDP-Socket-Programming/Experiment-8.2-Bidirectional-UDP-Chat UDPClient
 ```
 
-Type messages in either terminal. Type `/exit` to send a disconnect message and close that side.
+Type `/exit` to send the application's exit command.
 
-## Concepts demonstrated
+## Port configuration
 
-- `DatagramSocket`: UDP communication endpoint
-- `DatagramPacket`: datagram payload and addressing
-- `InetAddress`: IP address resolution
-- `send()` and `receive()`: UDP datagram transmission
-- `Thread`: independent sending and receiving execution
-- `getData()` and `getLength()`: extracting the received payload
+| Program | Local UDP port | Destination |
+|---|---:|---:|
+| Server | 2000 | Client port 2001 |
+| Client | 2001 | Server port 2000 |
 
-## Important UDP note
-
-UDP is connectionless and does not guarantee delivery, ordering, or retransmission. These examples are educational localhost demonstrations, not production chat software.
-
-## Troubleshooting
-
-- Start the server before the client.
-- Ensure ports `2000` and `2001` are not already in use.
-- Run each program in a separate terminal.
-- If using two different computers, replace `localhost` with the server computer's reachable IP address and configure the peer addresses and ports accordingly.
+**Note:** UDP is connectionless and best-effort. It does not guarantee delivery, ordering, or retransmission. The chat's `/exit` command is an application-level message, not a UDP protocol feature.
