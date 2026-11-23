@@ -9,7 +9,7 @@ public class UDPClient {
         DatagramSocket socket = new DatagramSocket(2001);
         InetAddress ip = InetAddress.getByName("localhost");
 
-        // This thread keeps receiving messages while we type.
+        // Receiver thread: keeps listening while the main thread is typing.
         Thread receiver = new Thread(() -> {
             try {
                 while (true) {
@@ -28,20 +28,20 @@ public class UDPClient {
                     if (message.equals("/exit")) {
                         System.out.println("Server left the chat.");
                         socket.close();
-                        break;
+                        System.exit(0);
                     }
 
                     System.out.print("You: ");
                 }
             } catch (Exception e) {
-                // The socket closes when the chat ends.
+                // Socket closes when the chat ends.
             }
         });
 
         receiver.setDaemon(true);
         receiver.start();
 
-        // Main thread sends messages typed by the user.
+        // Main thread: reads and sends messages.
         Scanner sc = new Scanner(System.in);
         System.out.println("Client started. Type /exit to quit.");
         System.out.print("You: ");
